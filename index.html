@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdaptiveVUS Navigator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body { background-color: #0B132B; color: #E0E6ED; font-family: 'Inter', sans-serif; }
+        .panel-card { background-color: #111C38; border: 1px solid #1E2D54; border-radius: 12px; padding: 20px; }
+    </style>
+</head>
+<body class="p-6">
+
+    <!-- Top Header -->
+    <div class="panel-card mb-6 flex justify-between items-center">
+        <div>
+            <div class="flex items-center gap-3">
+                <h1 class="text-2xl font-extrabold text-cyan-400">AdaptiveVUS Navigator</h1>
+                <span class="text-xs bg-slate-800 text-cyan-300 px-2.5 py-1 rounded-md border border-slate-700 font-semibold">🧬 Centromere Dynamics & Satellite DNA Biophysics</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">Translating evolutionary constraint analyses and centromeric co-adaptation into clinical VUS re-annotation.</p>
+        </div>
+        <div class="flex gap-2">
+            <span class="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1.5 rounded-full font-semibold">● FREEDA Engine Active</span>
+            <span class="text-xs bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-3 py-1.5 rounded-full font-semibold">● Satellite DNA Geometry Engine v2.4</span>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs Bar -->
+    <div class="flex gap-2 mb-6 bg-[#111C38] p-1.5 rounded-xl border border-[#1E2D54] w-fit">
+        <button onclick="switchTab('interrogator')" id="tab-interrogator" class="px-4 py-2 rounded-lg text-sm font-bold bg-[#0B132B] text-cyan-400 shadow">🔍 Variant Interrogator</button>
+        <button onclick="switchTab('matrix')" id="tab-matrix" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white">📊 Dual Scoring Matrix</button>
+        <button onclick="switchTab('biophysics')" id="tab-biophysics" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white">🧬 DNA Shape & 3D Biophysics</button>
+    </div>
+
+    <!-- TAB 1: VARIANT INTERROGATOR -->
+    <div id="section-interrogator" class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- 1. Variant Selection -->
+        <div class="panel-card flex flex-col justify-between">
+            <div>
+                <h2 class="text-sm font-bold text-white uppercase tracking-wider mb-4 flex items-center justify-between">
+                    <span>1. Variant Selection</span>
+                    <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">Compact</span>
+                </h2>
+                
+                <label class="text-xs text-slate-400 font-semibold block mb-1">Gene Target</label>
+                <select id="gene-target" class="w-full bg-[#0B132B] border border-[#1E2D54] rounded-lg p-2.5 text-xs text-white mb-3">
+                    <option value="CENP-A">CENP-A (Centromere Protein A)</option>
+                    <option value="CENP-T">CENP-T (Kinetochore Core)</option>
+                    <option value="CENP-C">CENP-C (Scaffold Hub)</option>
+                    <option value="HMGA1">HMGA1 (Pericentromeric Binder)</option>
+                </select>
+
+                <label class="text-xs text-slate-400 font-semibold block mb-1">Variant (HGVS / Residue)</label>
+                <input type="text" id="variant-input" value="p.Arg80His (Centromeric Alpha-Sat)" class="w-full bg-[#0B132B] border border-[#1E2D54] rounded-lg p-2.5 text-xs text-white mb-3">
+
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                    <div>
+                        <label class="text-[11px] text-slate-400 font-semibold block mb-1">Amino Acid</label>
+                        <input type="text" id="amino-acid" value="Arg80His" class="w-full bg-[#0B132B] border border-[#1E2D54] rounded-lg p-2 text-xs text-white">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-slate-400 font-semibold block mb-1">Sat-DNA Context</label>
+                        <input type="text" id="sat-context" value="Alpha-Sat Hor1" class="w-full bg-[#0B132B] border border-[#1E2D54] rounded-lg p-2 text-xs text-white">
+                    </div>
+                </div>
+
+                <label class="text-xs text-slate-400 font-semibold block mb-1">Satellite Repeat Type</label>
+                <select id="sat-type" class="w-full bg-[#0B132B] border border-[#1E2D54] rounded-lg p-2.5 text-xs text-white mb-4">
+                    <option>Satellite 1 (AT-rich minor groove)</option>
+                    <option>Alpha Satellite HOR D17Z1</option>
+                    <option>Beta Satellite Repeat</option>
+                </select>
+            </div>
+
+            <button onclick="recomputeBiophysics()" id="recompute-btn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs py-3 rounded-lg shadow-lg transition-all flex items-center justify-center gap-2">
+                ⚡ Recompute Biophysics
+            </button>
+        </div>
+
+        <!-- 2. Conventional Predictors -->
+        <div class="panel-card flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">2. Conventional Predictors</h2>
+                    <span class="text-[10px] text-slate-400">Standard</span>
+                </div>
+
+                <div class="mb-3 space-y-2">
+                    <div class="flex justify-between text-xs"><span class="text-slate-400">AlphaMissense</span><span id="alphamissense-val" class="font-bold text-amber-400">0.784 (Likely Path.)</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-400">REVEL Ensemble</span><span id="revel-val" class="font-bold text-amber-400">0.642 (VUS Zone)</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-400">CADD Phred</span><span id="cadd-val" class="font-bold text-white">26.8</span></div>
+                    <div class="flex justify-between text-xs"><span class="text-slate-400">PolyPhen-2 / SIFT</span><span id="polyphen-val" class="font-bold text-rose-400">Damaging (0.91)</span></div>
+                </div>
+            </div>
+
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-[11px] text-amber-300">
+                ⚠️ Standard predictors lack centromeric satellite DNA geometry context, often misclassifying functional adaptations.
+            </div>
+        </div>
+
+        <!-- 3. Adaptive VUS Index -->
+        <div class="panel-card flex flex-col justify-between border-cyan-500/40 bg-[#132043]">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">3. Adaptive VUS Index</h2>
+                </div>
+
+                <div class="text-center my-2">
+                    <div class="text-[10px] text-cyan-300 font-bold uppercase tracking-wider">Calculated Adaptive Score</div>
+                    <div id="adaptive-score" class="text-3xl font-extrabold text-cyan-400 my-1">0.892</div>
+                    <span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-500/30">Adaptive / Benign (Centromeric Drive)</span>
+                </div>
+
+                <div class="space-y-3 mt-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Centromeric Drive Correction (&omega;)</span><span id="dnds-metric" class="font-bold text-cyan-300">2.41 dN/dS</span></div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div id="bar-dnds" class="bg-cyan-400 h-full" style="width: 85%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Satellite Repeat Coupling</span><span id="coupling-metric" class="font-bold text-cyan-300">88.4%</span></div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden"><div id="bar-coupling" class="bg-blue-400 h-full" style="width: 88%;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-[11px] text-cyan-200 bg-cyan-950/40 border border-cyan-800/50 rounded-lg p-2.5 mt-3">
+                <span>ℹ️ High centromeric co-evolutionary constraint detected. Variant compensates for satellite expansion.</span>
+            </div>
+        </div>
+
+        <!-- 4. Minor Groove Sterics -->
+        <div class="panel-card flex flex-col justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-sm font-bold text-white uppercase tracking-wider">4. Minor Groove Sterics</h2>
+                    <span class="text-[10px] text-purple-300">Biophysics</span>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Groove Electrostatic Fit</span><span id="electrostatic-val" class="font-bold text-purple-400">-14.2 kcal/mol</span></div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full"><div class="bg-purple-500 h-full" style="width: 72%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Steric Clash Index</span><span id="steric-val" class="font-bold text-emerald-400">0.04 Å (Minimal)</span></div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full"><div class="bg-emerald-500 h-full" style="width: 20%;"></div></div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1"><span class="text-slate-400">Hydration Shell Penalty</span><span id="hydration-val" class="font-bold text-cyan-400">2.1 kJ/mol</span></div>
+                        <div class="w-full bg-slate-800 h-1.5 rounded-full"><div class="bg-cyan-500 h-full" style="width: 45%;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-[11px] text-slate-400 mt-4 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+                ⚛️ Optimized for AT-rich satellite DNA minor groove insertion.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Chart Section -->
+    <div id="chart-container" class="panel-card mt-6">
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-bold text-white">Protein Linear Architecture & Evolutionary Constraint Map (dN/dS vs Residue Position)</h3>
+            <span class="text-xs text-slate-400">Mapping structural domains against centromeric satellite repeat co-adaptation peaks.</span>
+        </div>
+        <div id="evolution-chart" style="width:100%; height:260px;"></div>
+    </div>
+
+    <!-- JavaScript Interactivity -->
+    <script>
+        function switchTab(tab) {
+            document.getElementById('tab-interrogator').className = tab === 'interrogator' ? 'px-4 py-2 rounded-lg text-sm font-bold bg-[#0B132B] text-cyan-400 shadow' : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white';
+            document.getElementById('tab-matrix').className = tab === 'matrix' ? 'px-4 py-2 rounded-lg text-sm font-bold bg-[#0B132B] text-cyan-400 shadow' : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white';
+            document.getElementById('tab-biophysics').className = tab === 'biophysics' ? 'px-4 py-2 rounded-lg text-sm font-bold bg-[#0B132B] text-cyan-400 shadow' : 'px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white';
+        }
+
+        // Render Initial Plotly Chart
+        const xValues = Array.from({length: 100}, (_, i) => i + 1);
+        let yValues = xValues.map(x => (x > 35 && x < 55) ? (1.8 + Math.random() * 0.9) : (0.2 + Math.random() * 0.5));
+
+        const trace = {
+            x: xValues,
+            y: yValues,
+            mode: 'lines',
+            line: { color: '#00F2FE', width: 2 }
+        };
+
+        const layout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            margin: { t: 10, r: 20, b: 30, l: 40 },
+            xaxis: { gridcolor: '#1E2D54', color: '#94A3B8' },
+            yaxis: { gridcolor: '#1E2D54', color: '#94A3B8' }
+        };
+
+        Plotly.newPlot('evolution-chart', [trace], layout, {responsive: true});
+
+        // Recompute Biophysics via FastAPI Backend Fetch
+        async function recomputeBiophysics() {
+            const btn = document.getElementById('recompute-btn');
+            const selectedGene = document.getElementById('gene-target').value;
+            btn.innerHTML = "⏳ Calling FastAPI Backend...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`/api/recompute?gene=${selectedGene}`);
+                const data = await response.json();
+
+                document.getElementById('alphamissense-val').innerText = data.alphamissense;
+                document.getElementById('revel-val').innerText = data.revel;
+                document.getElementById('cadd-val').innerText = data.cadd;
+                document.getElementById('polyphen-val').innerText = data.polyphen;
+
+                document.getElementById('adaptive-score').innerText = data.adaptive_score;
+                document.getElementById('dnds-metric').innerText = data.dnds;
+                document.getElementById('coupling-metric').innerText = data.coupling;
+
+                document.getElementById('electrostatic-val').innerText = data.electrostatic;
+                document.getElementById('steric-val').innerText = data.steric;
+                document.getElementById('hydration-val').innerText = data.hydration;
+
+                Plotly.update('evolution-chart', {y: [data.chart_y]});
+
+            } catch (error) {
+                console.error("Backend fetch error:", error);
+                alert("Failed to communicate with FastAPI backend.");
+            } finally {
+                btn.innerHTML = "⚡ Recompute Biophysics";
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
